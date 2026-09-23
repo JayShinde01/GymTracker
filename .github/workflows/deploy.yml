@@ -2,64 +2,59 @@ name: CI/CD Pipeline - Gym Tracker
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Get the code
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
+      # 2. Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
+      # 3. Install backend dependencies
       - name: Install Backend Dependencies
-        run: |
-          cd backend
-          npm install
+        working-directory: ./backend
+        run: npm install
 
+      # 4. Run backend tests
       - name: Run Backend Tests
-        run: |
-          cd backend
-          npm test
+        working-directory: ./backend
+        run: npm test
 
+      # 5. Install frontend dependencies
       - name: Install Frontend Dependencies
-        run: |
-          cd frontend
-          npm install
+        working-directory: ./frontend
+        run: npm install
 
+      # 6. Build frontend
       - name: Build Frontend
-        run: |
-          cd frontend
-          npm run build
+        working-directory: ./frontend
+        run: npm run build
 
-      - name: Log in to Docker Hub
+      # 7. Login to Docker Hub
+      - name: Login to Docker Hub
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # 8. Build and Push Backend Docker Image
       - name: Build and Push Backend Docker Image
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./backend
           file: ./backend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/gym-tracker-backend:latest
-
-      - name: Build and Push Frontend Docker Image
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./frontend/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/gym-tracker-frontend:latest
