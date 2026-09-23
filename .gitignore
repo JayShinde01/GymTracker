@@ -1,0 +1,13 @@
+node_modules/
+.env
+.DS_Store
+frontend/.next/
+frontend/.next
+frontend/build/
+frontend/dist/
+backend/node_modules/
+backend/.env
+backend/.next/
+backend/build/
+backend/dist/
+coverage/
